@@ -1,0 +1,66 @@
+CREATE KEYSPACE fit5137_assign_c3
+WITH replication = {'class':'SimpleStrategy’,
+'Replication_factor':1};
+
+USE fit5137_assign_c3;
+
+CREATE TABLE review( listing_id int, id int, date date, reviewer_id int, reviewer_name text, review_scores_rating int, comments text, PRIMARY KEY (id)) ;
+
+COPY review(listing_id,id,date,reviewer_id,reviewer_name,review_scores_rating,comments) FROM '/Users/sarah/Downloads/assignment_data_3/review.csv' WITH DELIMITER=',' AND HEADER=TRUE;
+
+
+15.
+
+CREATE TABLE q3tables( listing_id int, id int, date date, reviewer_id int, reviewer_name text, review_scores_rating int, comments text, PRIMARY KEY ((listing_id), date)) ;
+
+SELECT * FROM q3tables WHERE listing_id=10803 ORDER BY date DESC LIMIT 1;
+
+
+16.
+
+SELECT * FROM review WHERE review_scores_rating>=70 and review_scores_rating<=90 ALLOW FILTERING ;
+
+
+17.
+
+SELECT listing_id,reviewer_id,reviewer_name,comments FROM review WHERE review_scores_rating<50 ALLOW FILTERING ;
+
+18.
+
+SELECT count(*) from review where date >= '2015-01-01' And date<='2015-12-31' Allow FILTERING;
+
+19.
+
+CREATE INDEX ON review(date);
+SELECT reviewer_id, reviewer_name,Max(review_scores_rating) FROM review WHERE date='2017-03-26';
+
+20.
+SELECT listing_id, reviewer_name, Max(review_scores_rating) AS max_review FROM review ;
+
+CREATE TABLE highRating( listing_id int, id int, date date, reviewer_id int, reviewer_name text, review_scores_rating int, comments text, PRIMARY KEY (review_scores_rating)) ;
+
+COPY highRating(listing_id,id,date,reviewer_id,reviewer_name,review_scores_rating,comments) FROM '/Users/sarah/Downloads/assignment_data_3/review.csv' WITH DELIMITER=',' AND HEADER=TRUE;
+
+SELECT listing_id, reviewer_name, review_scores_rating FROM high_rating WHERE review_scores_rating = 100;
+
+
+Extra question:
+
+04.
+
+CREATE TABLE reviewerName( listing_id int, id int, date date, reviewer_id int, reviewer_name text, review_scores_rating int, comments text, PRIMARY KEY (reviewer_name)) ;
+
+COPY reviewerName(listing_id,id,date,reviewer_id,reviewer_name,review_scores_rating,comments) FROM '/Users/sarah/Downloads/assignment_data_3/review.csv' WITH DELIMITER=',' AND HEADER=TRUE;
+
+SELECT * from reviewerName where reviewer_name='Julie';
+
+05.
+
+CREATE TABLE listingReview( listing_id int, id int, date date, reviewer_id int, reviewer_name text, review_scores_rating int, comments text, PRIMARY KEY (listing_id)) ;
+
+COPY listingReview(listing_id,id,date,reviewer_id,reviewer_name,review_scores_rating,comments) FROM '/Users/sarah/Downloads/assignment_data_3/review.csv' WITH DELIMITER=',' AND HEADER=TRUE;
+
+SELECT reviewer_id, reviewer_name, review_scores_rating FROM listingReview WHERE listing_id = 9835;
+
+
+

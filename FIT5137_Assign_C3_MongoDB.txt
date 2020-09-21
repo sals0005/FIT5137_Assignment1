@@ -1,0 +1,283 @@
+Importing MongoDB:
+
+mongoimport --db FIT5137_Assign_C3 --collection host --file C:\Users\lakmee\Downloads\host.json
+
+mongoimport --db FIT5137_Assign_C3 --collection listing --file C:\Users\lakmee\Downloads\listing.json
+
+
+Creating Embedded Collection:
+
+db.host.aggregate([
+	{ $lookup:{ from:"listing", localField:"host_id", foreignField:"host_id", as:"hostList" } },		{$out: 'host_listing'}
+])
+
+
+01.
+
+Referencing: 
+
+db.listing.aggregate([
+	{ $match: {"last_review" : { $gte: ISODate("2018-12-01T00:00:00") }, "last_review" : { $lte: ISODate("2018-12-31T00:00:00") }} },
+	{ $count : "totalAccommodations" }
+]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([
+	{ $unwind : '$hostList' },
+	{ $match: {'hostList.last_review' : { $gte: ISODate("2018-12-01T00:00:00") }, 'hostList.last_review' : { $lte: ISODate("2018-12-31T00:00:00") }} },
+	{ $count : "totalAccommodations" }
+]).pretty()
+
+
+2.
+
+ Referencing:
+
+db.listing.aggregate([{ $match : {"neighbourhood": "Port Phillip"}},{ $group:{_id: "$neighbourhood", avg_price:{$avg:"$price"}}}])
+
+Embedding:
+
+db.host_listing.aggregate([{$unwind:"$hostList"},{ $match : {"hostList.neighbourhood": "Port Phillip"}},{ $group:{_id: "$hostList.neighbourhood", avg_price:{$avg:"$hostList.price"}}}]).pretty()
+
+
+3.
+
+ Referencing: 
+
+db.listing.aggregate([
+	{ $group: { _id: "$neighbourhood", avgReviews: { $avg: "$reviews_per_month" } } },
+	{ $sort : {avgReviews : -1} }, 
+ 	{ $limit: 10 }
+]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([
+	{ $unwind : '$hostList' },
+	{ $group: { _id: '$hostList.neighbourhood', avgReviews: { $avg: '$hostList.reviews_per_month' } } },
+	{ $sort : {avgReviews : -1} }, 
+ 	{ $limit: 10 }
+]).pretty()
+
+
+4.
+
+ Referencing:
+
+db.listing.aggregate([ { $match : {"neighbourhood": "Melbourne"}},{$group:{_id:"$name", numberOfReviews:{$sum:"$number_of_reviews"}}}, {$sort:{numberOfReviews:1}}]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([{$unwind:"$hostList"},{ $match : {"hostList.neighbourhood": "Melbourne"}},{ $group:{_id: "$hostList.name", numberOfReviews:{$sum:"$hostList.number_of_reviews"}}},{$sort:{numberOfReviews:1}}]).pretty()
+
+
+5. 
+
+Referencing:
+
+db.listing.aggregate([
+	{ $group: { _id: "$room_type", totalOccurrence: { $sum: 1 } } }, 
+	{ $sort: {totalOccurrence: -1} },
+	{ $limit: 1 }
+]).pretty()
+
+
+Embedding:
+
+db.host_listing.aggregate([
+	{ $unwind : '$hostList' },
+	{ $group: { _id: '$hostList.room_type', totalOccurrence: { $sum: 1 } } },
+	{ $sort: {totalOccurrence: -1} },
+	{ $limit: 1 }
+]).pretty()
+
+
+6.
+
+Referencing:
+
+db.listing.aggregate([ {$project:{_id:0,neighbourhood:1,price:1}},{$sort:{"price":-1}},{$limit:5}]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([{$unwind:"$hostList"},{$project:{_id:0,"hostList.neighbourhood":1,"hostList.price":1}},{$sort:{"hostList.price":-1}},{$limit:5}]).pretty()
+
+
+7.
+
+ Referencing:
+db.host.aggregate([ 
+	{ $lookup : {  from : "listing", localField: "host_id", foreignField:"host_id", as:"hostList"}}, 
+	{ $match : { "host_name" : "Eleni" } },
+	{ $project : {_id : 0, 'hostList.id' : 1, 'hostList.name' : 1, 'hostList.street' : 1,  }}
+]).pretty()
+
+Embedding:
+db.host_listing.aggregate([
+	{ $match : { "host_name" : "Eleni" } },
+	{ $unwind : '$hostList' },
+	{ $project : {_id : 0, 'hostList.id' : 1, 'hostList.name' : 1, 'hostList.street' : 1,  } }
+]).pretty()
+
+
+8.
+
+ Referencing:
+db.host.aggregate( [ { $lookup : {  from : "listings", localField: "host_id", foreignField:"host_id", as:"listings"}}, {$match:{"host_response_time":"within a few hours"}}]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([{$unwind:"$hostList"},{$match:{"host_response_time":"within a few hours"}}]).pretty()
+
+
+9.
+
+Referencing: 
+db.host.aggregate([ 
+	{ $lookup : {  from : "listing", localField: "host_id", foreignField:"host_id", as:"hostList"}}, 
+	{ $match : { $and: [ { "host_name" : "Colin" }, { 'hostList.amenities' : /internet/i }, { 'hostList.amenities' : /gym/i } ]}}
+]).pretty()
+
+Embedding
+
+db.host_listing.aggregate([
+	{ $match : { "host_name" : "Colin" } },
+	{ $unwind : '$hostList' },
+	{ $match : { $and: [ { 'hostList.amenities' : /internet/i }, { 'hostList.amenities' : /gym/i } ]}}
+]).pretty()
+
+
+10.
+
+ Referencing:
+
+db.listing.aggregate([{$match:{neighbourhood:"Clayton",name:{ $regex:/Beautiful/}}}, {$project:{_id:0,price:1,"room_type":1}}]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([{$unwind:"$hostList"},{$match:{"hostList.neighbourhood":"Clayton","hostList.name":{ $regex:/Beautiful/}}}, {$project:{_id:0,"hostList.price":1,"hostList.room_type":1}}]).pretty()
+
+
+11.
+
+ Referencing: 
+db.listing.aggregate([
+	{ $project: { personName: { $concat: [ 
+		"$name", 
+		", ", 
+		"$street",
+		 ", ", 
+		{ $toString : "$zipcode" },
+		", ", 
+		"$neighbourhood" ] } } },
+	{ $project: {_id: 0} },
+	{ $sort: { personName : 1} }
+]).pretty()
+
+
+Embedding:
+
+db.host_listing.aggregate([
+	{ $unwind : '$hostList' },
+	{ $project: { personName: { $concat: [ 
+		"$hostList.name", 
+		", ", 
+		"$hostList.street",
+		 ", ", 
+		{ $toString : "$hostList.zipcode" },
+		", ", 
+		"$hostList.neighbourhood" ] } } },
+	{ $project: {_id: 0} },
+	{ $sort: { personName : 1} }
+]).pretty()
+
+
+12.
+
+Referencing:
+db.listing.aggregate([{$sort:{"availability_365":-1}}, {$project:{_id:0,"availability_365":1,name:1, current : new ISODate()}},{$limit:1}]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([{$unwind:"$hostList"},{$sort:{"hostList.availability_365":-1}}, {$project:{_id:0,"hostList.availability_365":1,"hostList.name":1, current : new ISODate()}},{$limit:1}]).pretty()
+
+13.
+
+ Referencing: 
+db.listing.aggregate([
+	{ $match: {'price' : { $gt: 50 } } },
+	{ $group : {_id : "$neighbourhood", price : {$first : "$price"}, uniqueNeighbourhood : { $push : "$neighbourhood" } } },
+	{ $sort : {uniqueNeighbourhood : -1} }, 
+	{ $project: { uniqueNeighbourhood : 0 } }
+]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([
+	{ $unwind : '$hostList' },
+	{ $match: { 'hostList.price' : { $gt: 50 } } },
+	{ $group : { _id : "$hostList.neighbourhood", price : { $first : "$hostList.price"}, uniqueNeighbourhood : { $push : "$hostList.neighbourhood" } } },
+	{ $sort : {uniqueNeighbourhood : -1} }, 
+	{ $project: { uniqueNeighbourhood : 0 } }
+]).pretty()
+
+
+14.
+
+ Referencing:
+
+db.host.aggregate([ {$project:{_id:0,"host_id":1,"host_name":1,"numberOfVerificationMethods":{ $cond: { if: { $isArray:"$host_verifications"}, then: { $size: "$host_verifications"}, else: "NA"} }}},{$sort:{numberOfVerificationMethods:-1}}]).pretty()
+
+Embedding:
+db.host_listing.aggregate([{$project:{_id:0,"host_id":1,"host_name":1,"numberOfVerificationMethods":{ $cond: { if: { $isArray:"$host_verifications"}, then: { $size: "$host_verifications"}, else: "NA"} }}},{$sort:{numberOfVerificationMethods:-1}}]).pretty()
+
+
+Extra Question:
+
+01.
+
+Referencing:
+
+db.listing.aggregate([
+	{ $match : { $and: [ {availability_365 : { $gt : 300 } }, {room_type : "Private room"} ] } }, 
+	{ $limit: 10 },
+	{ $project: { _id : 0, name : 1, latitude : 1, longitude : 1, availability_365 : 1 } },
+	{ $sort : {availability_365 : -1} }
+]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([
+	{ $unwind : '$hostList' },
+	{ $match : { $and: [ 
+		{ 'hostList.availability_365' : { $gt : 300 } }, 
+		{ 'hostList.room_type' : "Private room"} 
+	] } },
+	{ $limit: 10 },
+		{ $project: { _id : 0, "hostList.name" : 1, "hostList.latitude" : 1, "hostList.longitude" : 1, "hostList.availability_365" : 1 } },
+		{ $sort : {"hostList.availability_365" : -1} }
+]).pretty()
+
+
+2.
+
+ Referencing:
+
+db.listing.aggregate([{$match:{minimum_nights:{$lt:4},$or:[ {neighbourhood:"Frankston"}, {neighbourhood:"Port Phillip"}]}},{$project:{_id:0,name:1, neighbourhood:1 ,minimum_nights:1}}]).pretty()
+
+Embedding:
+
+ db.host_listing.aggregate([{$unwind:"$hostList"}, {$match:{"hostList.minimum_nights":{$lt:4} ,$or:[ {"hostList.neighbourhood":"Frankston"}, {"hostList.neighbourhood":"Port Phillip"}]}},{$project:{_id:0,"hostList.name":1,"hostList.neighbourhood":1,"hostList.minimum_nights":1}}]).pretty()
+
+
+3.
+
+ Referencing:
+
+db.listing.aggregate([ {$group:{_id:{neighbourhood: "$neighbourhood"}, totalAccomedtions:{$sum:1}}},{ $sort: {totalAccomedtions: -1} }]).pretty()
+
+Embedding:
+
+db.host_listing.aggregate([{$unwind:"$hostList"}, {$group:{ _id:{"neighbourhood":"$hostList.neighbourhood"}, totalAccomedtions:{$sum:1}}},{ $sort: {totalAccomedtions: -1} }]).pretty()
+

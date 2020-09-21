@@ -1,0 +1,115 @@
+01.
+
+ db.host.update( 
+	{ "name": "Adam" }, 
+	{ $push: { "verification": "facebook" } }
+)
+
+
+02.
+
+ db.host.insertMany([{ 
+	"hostId": "MONHOS011",
+	"name": "Alison",
+	"verification": [
+		"email", 
+		"phone",
+		"facebook",
+		"reviews"],
+	"since": Date("2009-01-09"),
+	"location": { 
+		"suburb": "Caulfield", 
+		"state": "Victoria", 
+		"country": "Australia" 
+	},
+	"responseRate": "within an hour",
+	"superhost": false	
+},
+{
+	"hostId": "MONHOS012",
+	"name": "Mike",
+	"verification": [
+		"email", 
+		"phone"],
+	"since": Date("2009-01-09"),
+	"location": { 
+		"suburb": "Clayton", 
+		"state": "Victoria", 
+		"country": "Australia" 
+	},
+	"responseRate": "within a day",
+	"superhost": true	
+},{ 
+	"hostId": "MONHOS013",
+	"name": "Robyn",
+	"Verification":[	
+"facebook",
+		"reviews"],
+	"since": Date("2009-01-09"),
+	"location": { 
+		"suburb": "Berwick", 
+		"state": "Victoria", 
+		"country": "Australia" 
+	},
+	"responseRate": "within an hour",
+	"superhost": false	
+},{ 
+	"hostId": "MONHOS014",
+	"name": "Daniel",
+	"verification": [
+		"email",
+		"manual offline"	,
+"work email"],
+	"since": Date("2009-01-09"),
+	"location": { 
+		"suburb": "Frankston", 
+		"state": "Victoria", 
+		"country": "Australia" 
+	},
+	"responseRate": "within a day",
+	"superhost": true	
+},{ 
+	"hostId": "MONHOS015",
+	"name": "Ron",
+	"verification": [
+		"facebook"
+		],
+	"since": Date("2009-01-09"),
+	"location": { 
+		"suburb": "Caulfield", 
+		"state": "Victoria", 
+		"country": "Australia" 
+	},
+	"responseRate": "within a day",
+	"superhost": false	
+}])
+
+
+03.
+
+ db.host.updateMany(
+{ "responseRate": "within an hour" },
+{ $set: { superhost: true } }
+)
+
+
+04.
+
+db.listing.deleteMany({ "availability":0} )
+
+
+05.
+
+ db.listing.updateMany(
+{ "neighbourhood": "Monash" },
+{ $set: { "neighbourhood": "Monash City" } }
+)
+
+06.
+
+UPDATE review SET satisfaction_reason= {'space', 'price'} WHERE review_id = 'REV11'. 
+
+07.
+CREATE INDEX ON review ( reviewer_id );
+SELECT review_id FROM review WHERE reviewer_id=500015;
+DELETE FROM review WHERE review_id='REV15';
